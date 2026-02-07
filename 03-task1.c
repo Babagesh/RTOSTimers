@@ -27,7 +27,7 @@
 
 
 #ifndef TOOGLE_DELAY_MS
-#define TOOGLE_DELAY_MS            1000
+#define TOOGLE_DELAY_MS            100
 #endif
 
 #ifndef BLINK_TASK_STACK_SIZE
@@ -101,7 +101,7 @@ void task1_init(void)
 
 #endif
 }
-  TimerHandle_t timer1_handle;
+ TimerHandle_t timer1_handle;
  StaticTimer_t timer1_buffer;
 /*******************************************************************************
  * Blink task.
@@ -113,6 +113,20 @@ static void task1(void *arg)
   //Use the provided calculation macro to convert milliseconds to OS ticks
   const TickType_t xDelay = pdMS_TO_TICKS(TOOGLE_DELAY_MS);
 
+
+  timer1_handle = xTimerCreateStatic(
+      "task timer",
+      pdMS_TO_TICKS(1000),
+      pdTRUE,
+      NULL,
+      timer1_callback,
+      &timer1_buffer);
+  sl_led_turn_off(&sl_led_led0);
+
+  xTimerStart(timer1_handle, portMAX_DELAY);
+  while (1) {
+    //Wait for specified delay
+    vTaskDelay(1000);
 
   }
 }

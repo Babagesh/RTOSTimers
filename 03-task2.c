@@ -55,7 +55,6 @@
  ******************************************************************************/
 
 static void task2(void *arg);
-void timer2_callback(TimerHandle_t handle);
 
 /*******************************************************************************
  **************************   GLOBAL FUNCTIONS   *******************************
@@ -110,8 +109,7 @@ void task2_init(void)
  * Blink task.
  ******************************************************************************/
 
-TimerHandle_t timer2_handle;
- StaticTimer_t timer2_buffer;
+extern TimerHandle_t timer1_handle;
 static void task2(void *arg)
 {
   (void)&arg;
@@ -119,29 +117,20 @@ static void task2(void *arg)
   //Use the provided calculation macro to convert milliseconds to OS ticks
 
 
-  timer2_handle = xTimerCreateStatic(
-      "task2 timer",
-       pdMS_TO_TICKS(2000),
-       pdFALSE,
-       NULL,
-       timer2_callback,
-       &timer2_buffer
-      );
-
   while (1) {
     //Wait for specified delay
-    if(sl_button_get_state(&sl_button_btn1))
+    if(sl_button_get_state(&sl_button_btn0))
       {
-        sl_led_turn_on(&sl_led_led1);
-        xTimerStart(timer2_handle, portMAX_DELAY);
+        int start_time = xTaskGetTickCount();
+        while(sl_button_get_state(&sl_button_btn0))
+          {
+              vTaskDelay(10);
+          }
+        int finish_time = xTaskGetTickCount();
+        int difference = finish_time - start_time;
+        xTimerChangePeriod(timer1_handle, difference, portMAX_DELAY);
       }
+
     vTaskDelay(pdMS_TO_TICKS(100));
   }
-}
-
-void timer2_callback(TimerHandle_t handle)
-{
-  (void)handle;
-  sl_led_turn_off(&sl_led_led1);
-  return;
 }
