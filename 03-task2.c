@@ -21,13 +21,17 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
+
 /*******************************************************************************
  *******************************   DEFINES   ***********************************
  ******************************************************************************/
 
+#ifndef LED_INSTANCE
+#define LED_INSTANCE               sl_led_led0
+#endif
 
 #ifndef TOOGLE_DELAY_MS
-#define TOOGLE_DELAY_MS            10000
+#define TOOGLE_DELAY_MS            1000
 #endif
 
 #ifndef BLINK_TASK_STACK_SIZE
@@ -50,8 +54,8 @@
  *********************   LOCAL FUNCTION PROTOTYPES   ***************************
  ******************************************************************************/
 
-static void task1(void *arg);
-void timer1_callback(TimerHandle_t handle);
+static void task2(void *arg);
+void timer2_callback(TimerHandle_t handle);
 
 /*******************************************************************************
  **************************   GLOBAL FUNCTIONS   *******************************
@@ -60,7 +64,7 @@ void timer1_callback(TimerHandle_t handle);
 /***************************************************************************//**
  * Initialize blink example.
  ******************************************************************************/
-void task1_init(void)
+void task2_init(void)
 {
   TaskHandle_t xHandle = NULL;
 
@@ -70,8 +74,8 @@ void task1_init(void)
   static StackType_t  xStack[BLINK_TASK_STACK_SIZE];
 
   // Create Blink Task without using any dynamic memory allocation
-  xHandle = xTaskCreateStatic(task1,
-                              "task1",
+  xHandle = xTaskCreateStatic(task2,
+                              "blink task",
                               BLINK_TASK_STACK_SIZE,
                               ( void * ) NULL,
                               tskIDLE_PRIORITY + 1,
@@ -88,7 +92,7 @@ void task1_init(void)
   BaseType_t xReturned = pdFAIL;
 
   // Create Blink Task using dynamic memory allocation
-  xReturned = xTaskCreate(task1,
+  xReturned = xTaskCreate(task2,
                           "blink task",
                           BLINK_TASK_STACK_SIZE,
                           ( void * ) NULL,
@@ -101,39 +105,43 @@ void task1_init(void)
 
 #endif
 }
-  TimerHandle_t timer1_handle;
- StaticTimer_t timer1_buffer;
+
 /*******************************************************************************
  * Blink task.
  ******************************************************************************/
-static void task1(void *arg)
+
+TimerHandle_t timer2_handle;
+ StaticTimer_t timer2_buffer;
+static void task2(void *arg)
 {
   (void)&arg;
 
   //Use the provided calculation macro to convert milliseconds to OS ticks
-  const TickType_t xDelay = pdMS_TO_TICKS(TOOGLE_DELAY_MS);
 
 
-  timer1_handle = xTimerCreateStatic(
-      "task timer",
-      pdMS_TO_TICKS(250),
-      pdTRUE,
-      NULL,
-      timer1_callback,
-      &timer1_buffer);
-  sl_led_turn_off(&sl_led_led0);
-  xTimerStart(timer1_handle, portMAX_DELAY);
+  timer2_handle = xTimerCreateStatic(
+      "task2 timer",
+       pdMS_TO_TICKS(2000),
+       pdFALSE,
+       NULL,
+       timer2_callback,
+       &timer2_buffer
+      );
 
   while (1) {
     //Wait for specified delay
-      vTaskDelay(xDelay);
-    // Toggle led
+    if(sl_button_get_state(&sl_button_btn1))
+      {
+        sl_led_turn_on(&sl_led_led1);
+        xTimerStart(timer2_handle, portMAX_DELAY);
+      }
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
 
-void timer1_callback(TimerHandle_t handle)
+void timer2_callback(TimerHandle_t handle)
 {
   (void)handle;
-  sl_led_toggle(&sl_led_led0);
+  sl_led_turn_off(&sl_led_led1);
   return;
 }

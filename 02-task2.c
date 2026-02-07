@@ -31,7 +31,7 @@
 #endif
 
 #ifndef TOOGLE_DELAY_MS
-#define TOOGLE_DELAY_MS            1000
+#define TOOGLE_DELAY_MS            10000
 #endif
 
 #ifndef BLINK_TASK_STACK_SIZE
@@ -130,12 +130,9 @@ static void task2(void *arg)
 
   while (1) {
     //Wait for specified delay
-    if(sl_button_get_state(&sl_button_btn1))
-      {
-        sl_led_turn_on(&sl_led_led1);
-        xTimerStart(timer2_handle, portMAX_DELAY);
-      }
-    vTaskDelay(pdMS_TO_TICKS(100));
+     const TickType_t xDelay = pdMS_TO_TICKS(TOOGLE_DELAY_MS);
+
+    vTaskDelay(xDelay);
   }
 }
 
